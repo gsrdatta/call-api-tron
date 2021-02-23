@@ -1,5 +1,5 @@
 const ip = require("ip").address();
-console.log(process.env.PORT);
+console.log('config port', process.env.PORT);
 var port = process.env.PORT || 2000;
 
 var publicPath = '';
