@@ -30,6 +30,16 @@ var freezeBalance = async function(tronWeb, amount, duration, resource, ownerAdd
     return receipt;
 }
 
+var unfreezeBalance = async function(tronWeb, resource, ownerAddress, receiverAddress, options, ownerPrivateKey){
+    // "resource" must be either "BANDWIDTH" or "ENERGY".
+    // "options" Optional, permission_id for multi-signature use. (Theo ví dụ trong document là 1)
+    const tradeobj = await tronWeb.transactionBuilder.unfreezeBalance(resource, ownerAddress, receiverAddress, options);
+    const signedtxn = await tronWeb.trx.sign(tradeobj, ownerPrivateKey);
+    const receipt = await tronWeb.trx.sendRawTransaction(signedtxn);
+    console.log('receipt', receipt);
+    return receipt;
+}
+
 router.post('/tron', async function(req, res) {
     try {
         console.log(req.body);
@@ -58,10 +68,10 @@ router.post('/tron', async function(req, res) {
                     case "getAccount":
                         var tronWeb = await InitTronWeb(req.body.chainName, null);
                         var account = await tronWeb.trx.getAccount(req.body.methodParams.address);
-                        res.json({ code: -1, mes: "OK", result: account });
+                        res.json({ code: 1, mes: "OK", result: account });
                         break;
                     default:
-                        answer = { code: 1, mes: "No method available" };
+                        answer = { code: -1, mes: "No method available" };
                         res.json(answer);
                 }
                 break;
@@ -71,8 +81,15 @@ router.post('/tron', async function(req, res) {
                     case "freezeBalance":
                         const tronWeb = InitTronWeb(req.body.chainName, null);
                         var result = await freezeBalance(tronWeb, req.body.methodParams.amount, req.body.methodParams.duration, req.body.methodParams.resource, req.body.methodParams.ownerAddress, req.body.methodParams.receiverAddress, req.body.methodParams.options, req.body.privateKey);
-                        res.json(result);
+                        res.json({ code: 1, mes: "OK", result: result });
                         break;
+
+                    case "unfreezeBalance":
+                        const tronWeb = InitTronWeb(req.body.chainName, null);
+                        var result = await unfreezeBalance(tronWeb, req.body.methodParams.resource, req.body.methodParams.ownerAddress, req.body.methodParams.receiverAddress, req.body.methodParams.options, req.body.privateKey);
+                        res.json({ code: 1, mes: "OK", result: result });
+                        break;
+
                     default:
                         answer = { code: -1, mes: "No method available" };
                         res.json(answer);
