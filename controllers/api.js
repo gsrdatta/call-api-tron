@@ -30,7 +30,7 @@ var freezeBalance = async function(tronWeb, amount, duration, resource, ownerAdd
     return receipt;
 }
 
-var unfreezeBalance = async function(tronWeb, resource, ownerAddress, receiverAddress, options, ownerPrivateKey){
+var unfreezeBalance = async function(tronWeb, resource, ownerAddress, receiverAddress, options, ownerPrivateKey) {
     // "resource" must be either "BANDWIDTH" or "ENERGY".
     // "options" Optional, permission_id for multi-signature use. (Theo ví dụ trong document là 1)
     const tradeobj = await tronWeb.transactionBuilder.unfreezeBalance(resource, ownerAddress, receiverAddress, options);
@@ -40,7 +40,7 @@ var unfreezeBalance = async function(tronWeb, resource, ownerAddress, receiverAd
     return receipt;
 }
 
-var sendTrx = async function(tronWeb, to, amount, from, options, ownerPrivateKey){
+var sendTrx = async function(tronWeb, to, amount, from, options, ownerPrivateKey) {
     // "options" Optional, permission_id for multi-signature use. (Theo ví dụ trong document là 1)
     const tradeobj = await tronWeb.transactionBuilder.sendTrx(to, tronWeb.toSun(amount), from, options);
     const signedtxn = await tronWeb.trx.sign(tradeobj, ownerPrivateKey);
@@ -49,7 +49,7 @@ var sendTrx = async function(tronWeb, to, amount, from, options, ownerPrivateKey
     return receipt;
 }
 
-var sendToken = async function(tronWeb, to, amount, tokenID, from, options, ownerPrivateKey){
+var sendToken = async function(tronWeb, to, amount, tokenID, from, options, ownerPrivateKey) {
     // "options" Optional, permission_id for multi-signature use. (Theo ví dụ trong document là 1)
     const tradeobj = await tronWeb.transactionBuilder.sendToken(to, amount, tokenID, from, options);
     const signedtxn = await tronWeb.trx.sign(tradeobj, ownerPrivateKey);
@@ -58,6 +58,45 @@ var sendToken = async function(tronWeb, to, amount, tokenID, from, options, owne
     return receipt;
 }
 
+class TetherContract {
+    constructor() {
+        this.ABI = "";
+        this.address = "";
+        this.decimal = 6;
+    }
+
+    async InitContract(tronWeb, address, ABI) {
+        this.ABI = ABI;
+        this.address = address;
+        let res = await tronWeb.contract().at(this.address);
+        return res;
+    }
+
+    static async method_Transfer(tronWeb, contractAddress, receiver, amount, issuerAddress, issuerPrivateKey) {
+        //  contractAddress	The smart contract address.	hexString
+        //  function	Function call, must not leave a blank space	String -> here is "transfer(address,uint256)"
+        //  amount is token number * 10^(token decimal 6, 18, ....)
+        //  issuerAddress Address that triggers the contract.	hexString
+
+        var parameter = [{ type: 'address', value: receiver }, { type: 'uint256', value: amount }];
+        // var parameter = [{type:'address',value:'TZHXa9oDr9LFamcDEz8ATeQht6xSnyqLVa'},{type:'uint256',value:1600000}];
+        const options = {
+            // feeLimit: 1000000000,
+            feeLimit: 40000000,
+            callValue: 0
+        };
+
+        const tradeobj = await tronWeb.transactionBuilder.triggerSmartContract(tronWeb.address.toHex(contractAddress), "transfer(address,uint256)", options,
+            parameter, tronWeb.address.toHex(issuerAddress));
+        // console.log('tradeobj', tradeobj.transaction.raw_data.contract[0].parameter.value);
+        const signedtxn = await tronWeb.trx.sign(tradeobj.transaction, issuerPrivateKey);
+        // console.log('signedtxn', signedtxn);
+        const receipt = await tronWeb.trx.sendRawTransaction(signedtxn);
+        console.log('receipt', receipt);
+        return receipt;
+    }
+
+}
 
 
 router.post('/tron', async function(req, res) {
@@ -106,12 +145,12 @@ router.post('/tron', async function(req, res) {
                         var result = await unfreezeBalance(tronWeb, req.body.methodParams.resource, req.body.methodParams.ownerAddress, req.body.methodParams.receiverAddress, req.body.methodParams.options, req.body.privateKey);
                         res.json({ code: 1, mes: "OK", result: result });
                         break;
-                        
+
                     case "sendTrx":
                         var result = await sendTrx(tronWeb, req.body.methodParams.to, req.body.methodParams.amount, req.body.methodParams.from, req.body.methodParams.options, req.body.privateKey);
                         res.json({ code: 1, mes: "OK", result: result });
                         break;
-                        
+
                     case "sendToken":
                         var result = await sendToken(tronWeb, req.body.methodParams.to, req.body.methodParams.amount, req.body.methodParams.tokenID, req.body.methodParams.from, req.body.methodParams.options, req.body.privateKey);
                         res.json({ code: 1, mes: "OK", result: result });
@@ -124,7 +163,17 @@ router.post('/tron', async function(req, res) {
                 break;
 
             case "TRONWEB.CONTRACT.USDT":
-                answer = "Mid";
+                switch (req.body.method) {
+                    case "transfer":
+                        //  req.body.methodParams : contractAddress, receiver, amount, issuerAddress
+                        var result = await TetherContract.method_Transfer(tronWeb, req.body.methodParams.contractAddress, req.body.methodParams.receiver, req.body.methodParams.amount, req.body.methodParams.issuerAddress, req.body.privateKey);
+                        res.json({ code: 1, mes: "OK", result: result });
+                        break;
+
+                    default:
+                        answer = { code: -1, mes: "No method available" };
+                        res.json(answer);
+                }
                 break;
 
             default:
