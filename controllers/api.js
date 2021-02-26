@@ -182,7 +182,7 @@ router.post('/tron', async function(req, res) {
         }
     } catch (err) {
         console.log(err);
-        res.json({ status: false, err });
+        res.json({ code: -1, mes: err });
     }
 })
 
