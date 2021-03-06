@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "ducatus-wallet-client": "^8.16.28",
     "express": "^4.17.1",
     "ip": "^1.1.5",
     "trongrid": "^1.2.6",

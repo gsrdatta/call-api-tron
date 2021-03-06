@@ -42,6 +42,7 @@ if (ip == '45.32.126.133') {
 
 
 module.exports = {
+    __basedir: __dirname,
     port: port,
     trxChain: 'shasta',
     secret: 'yolo_kameyoko_lololo',

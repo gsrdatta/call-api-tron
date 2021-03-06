@@ -2,6 +2,7 @@ var router = require('express').Router();
 const config = require('../config');
 const TronWeb = require('tronweb');
 const HttpProvider = TronWeb.providers.HttpProvider;
+const DUC_HELPER = require('../lib/duc_help');
 
 var InitTronWeb = function(chainName, privateKey) {
     // return new Promise(async(resolve, reject) => {
@@ -185,6 +186,64 @@ router.post('/tron', async function(req, res) {
         res.json({ code: -1, mes: err });
     }
 })
+
+
+router.post('/duc-ws', async(req, res, next) => {
+    try {
+        console.log(req.body);
+        switch (req.body.method.toUpperCase()) {
+            case "CREATE_WALLET":
+                var result = await DUC_HELPER.createWallet(req.body.methodParams.wallet);
+                res.json({ code: 1, result: result });
+                break;
+
+            case "GET_BALANCE":
+                var openWallet = await DUC_HELPER.openWallet(req.body.methodParams.wallet);
+                var getbalance = await DUC_HELPER.getBalance(openWallet.client);
+                res.json(getbalance);
+                break;
+
+            case "CREATE_ADDRESS":
+                var openWallet = await DUC_HELPER.openWallet(req.body.methodParams.wallet);
+                var createAddress = await DUC_HELPER.createAddress(openWallet.client);
+                res.json(createAddress);
+                break;
+
+            case "GET_MAIN_ADDRESS":
+                var openWallet = await DUC_HELPER.openWallet(req.body.methodParams.wallet);
+                var getMainAddresses = await DUC_HELPER.getMainAddresses(openWallet.client, req.body.methodParams.options);
+                res.json(getMainAddresses);
+                break;
+
+            case "GET_TX_HISTORY":
+                var openWallet = await DUC_HELPER.openWallet(req.body.methodParams.wallet);
+                var getTxHistory = await DUC_HELPER.getTxHistory(openWallet.client, req.body.methodParams.options);
+                res.json(getTxHistory);
+                break;
+
+            case "SEND_DUC":
+                var openWallet = await DUC_HELPER.openWallet(req.body.methodParams.wallet);
+                // var sendDUC = await DUC_HELPER.getTxHistory(openWallet.client, req.body.methodParams.options);
+                var createTxProposal = await DUC_HELPER.createTxProposal(openWallet.client, req.body.methodParams.options);
+                var publishTxProposal = await DUC_HELPER.publishTxProposal(openWallet.client, createTxProposal.result);
+                var pushSignatures = await DUC_HELPER.pushSignatures(openWallet.client, publishTxProposal.result, req.body.methodParams.secret);
+                var broadcastTxProposal = await DUC_HELPER.broadcastTxProposal(openWallet.client, pushSignatures.result);
+                res.json(broadcastTxProposal);
+                break;
+
+            default:
+                answer = { code: -1, mes: "No method founded ." };
+                res.json(answer);
+        }
+
+    } catch (err) {
+        console.log(err);
+        res.json({ code: -1, mes: err });
+    }
+});
+
+
+module.exports = router
 
 
 module.exports = router
