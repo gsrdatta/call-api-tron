@@ -3,17 +3,20 @@ var Address = require('bitcore-lib');
 var fs = require('fs');
 
 var wallet = {
-    name: "vi 1", // tên hiển thị trong wallet.ducatus.io
-    user: 'user1', // Tên người dùng
-    opts: {
-        coin: 'duc',
-        network: 'livenet',
-        account: 0,
-        n: 1
+        name: "vi 1", // tên hiển thị trong wallet.ducatus.io
+        user: 'user1', // Tên người dùng
+        opts: {
+            coin: 'duc',
+            network: 'livenet',
+            account: 0,
+            n: 1
+        }
     }
-}
-
-
+    // var xxx = JSON.parse(fs.readFileSync("./wallet-store/user1.txt"));
+    // console.log(typeof xxx);
+console.log(fs.readFileSync("./wallet-store/abcxyz.txt").toString());
+console.log(fs.readFileSync("./wallet-store/Thuong.dat").toString());
+console.log(fs.readFileSync("./wallet-store/Thuong-secret.dat").toString());
 
 // DUC_HELPER.hello();
 var main = async function() {
@@ -56,5 +59,5 @@ var main = async function() {
     // var broadcastTxProposal = await DUC_HELPER.broadcastTxProposal(openWallet.client, pushSignatures.result);
     // console.log('broadcastTxProposal', broadcastTxProposal);
 
-}
-main();
+};
+// main();

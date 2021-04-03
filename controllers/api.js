@@ -223,8 +223,9 @@ router.post('/duc-ws', async(req, res, next) => {
 
             case "SEND_DUC":
                 var openWallet = await DUC_HELPER.openWallet(req.body.methodParams.wallet);
-                // var sendDUC = await DUC_HELPER.getTxHistory(openWallet.client, req.body.methodParams.options);
                 var createTxProposal = await DUC_HELPER.createTxProposal(openWallet.client, req.body.methodParams.options);
+                if (createTxProposal.code == -1)
+                    return res.json(createTxProposal);
                 var publishTxProposal = await DUC_HELPER.publishTxProposal(openWallet.client, createTxProposal.result);
                 var pushSignatures = await DUC_HELPER.pushSignatures(openWallet.client, publishTxProposal.result, req.body.methodParams.secret);
                 var broadcastTxProposal = await DUC_HELPER.broadcastTxProposal(openWallet.client, pushSignatures.result);
