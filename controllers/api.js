@@ -3,6 +3,7 @@ const config = require('../config');
 const TronWeb = require('tronweb');
 const HttpProvider = TronWeb.providers.HttpProvider;
 const DUC_HELPER = require('../lib/duc_help');
+const BSC_HELPER = require('../lib/bsc_help');
 
 var InitTronWeb = function(chainName, privateKey) {
     // return new Promise(async(resolve, reject) => {
@@ -244,7 +245,42 @@ router.post('/duc-ws', async(req, res, next) => {
 });
 
 
-module.exports = router
+router.post('/bsc', async(req, res) => {
+    try{
+        switch (req.body.cate.toUpperCase()) {
+            case "WEB3.ETH.ACCOUNTS":
+                switch (req.body.method) {
+                    case "create":
+                        var account = await BSC_HELPER.createAccount(req.body.chainName);
+                        res.json({ code: 1, mes: "OK", result: account });
+                        break;
+                    default:
+                        answer = { code: -1, mes: "No method available" };
+                        res.json(answer);
+                }
+                break;
 
+            case "WEB3.ETH":
+                switch (req.body.method.toUpperCase()) {
+                    case "GETBALANCE":
+                        var balance = await BSC_HELPER.getBalance(req.body.chainName, req.body.methodParams.address);
+                        res.json({ code: 1, mes: "OK", result: balance });
+                        break;
+                    default:
+                        answer = { code: -1, mes: "No method available" };
+                        res.json(answer);
+                }
+                break;
+            
+            default:
+                answer = { code: -1, mes: "No cate name founded ." };
+                res.json(answer);
+
+        }
+    }catch (err) {
+        console.log(err);
+        res.json({ code: -1, mes: err });
+    }
+})
 
 module.exports = router
