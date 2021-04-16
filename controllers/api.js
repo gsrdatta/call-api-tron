@@ -248,10 +248,12 @@ router.post('/duc-ws', async(req, res, next) => {
 router.post('/bsc', async(req, res) => {
     try{
         switch (req.body.cate.toUpperCase()) {
+            
             case "WEB3.ETH.ACCOUNTS":
+                var web3 = await BSC_HELPER.initChain(req.body.chainName);
                 switch (req.body.method) {
-                    case "create":
-                        var account = await BSC_HELPER.createAccount(req.body.chainName);
+                    case "createAccount":
+                        var account = await BSC_HELPER.createAccount(web3);
                         res.json({ code: 1, mes: "OK", result: account });
                         break;
                     default:
@@ -261,11 +263,30 @@ router.post('/bsc', async(req, res) => {
                 break;
 
             case "WEB3.ETH":
+                var web3 = await BSC_HELPER.initChain(req.body.chainName);
                 switch (req.body.method.toUpperCase()) {
                     case "GETBALANCE":
-                        var balance = await BSC_HELPER.getBalance(req.body.chainName, req.body.methodParams.address);
+                        var balance = await BSC_HELPER.getBalance(web3, req.body.methodParams.address);
                         res.json({ code: 1, mes: "OK", result: balance });
                         break;
+
+                    case "GETTRANSACTION":
+                        var tran = await BSC_HELPER.getTransaction(web3, req.body.methodParams.hash);
+                        res.json({ code: 1, mes: "OK", result: tran });
+                        break;
+
+                    case "GETTRANSACTIONRECEIPT":
+                        var tran = await BSC_HELPER.getTransactionReceipt(web3, req.body.methodParams.hash);
+                        res.json({ code: 1, mes: "OK", result: tran });
+                        break;
+
+                    case "SENDSIGNEDTRANSACTION":
+                        var tran = await BSC_HELPER.sendSignedTransaction(web3, req.body.chainName, req.body.methodParams.from, req.body.methodParams.to, 
+                            req.body.methodParams.amount, req.body.methodParams.gasPrice , req.body.methodParams.gasLimit , req.body.methodParams.privateKey);
+                        res.json({ code: 1, mes: "OK", result: tran });
+                        break;
+                        
+                        
                     default:
                         answer = { code: -1, mes: "No method available" };
                         res.json(answer);
