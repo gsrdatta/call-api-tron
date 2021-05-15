@@ -13,6 +13,7 @@
     "ducatus-wallet-client": "^8.16.28",
     "ethereumjs-common": "^1.5.2",
     "ethereumjs-tx": "^2.1.2",
+    "ethereumjs-wallet": "^1.0.1",
     "express": "^4.17.1",
     "ip": "^1.1.5",
     "trongrid": "^1.2.6",

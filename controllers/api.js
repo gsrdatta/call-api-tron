@@ -246,9 +246,9 @@ router.post('/duc-ws', async(req, res, next) => {
 
 
 router.post('/bsc', async(req, res) => {
-    try{
+    try {
         switch (req.body.cate.toUpperCase()) {
-            
+
             case "WEB3.ETH.ACCOUNTS":
                 var web3 = await BSC_HELPER.initChain(req.body.chainName);
                 switch (req.body.method) {
@@ -281,24 +281,51 @@ router.post('/bsc', async(req, res) => {
                         break;
 
                     case "SENDSIGNEDTRANSACTION":
-                        var tran = await BSC_HELPER.sendSignedTransaction(web3, req.body.chainName, req.body.methodParams.from, req.body.methodParams.to, 
-                            req.body.methodParams.amount, req.body.methodParams.gasPrice , req.body.methodParams.gasLimit , req.body.methodParams.privateKey);
+                        var tran = await BSC_HELPER.sendSignedTransaction(web3, req.body.chainName, req.body.methodParams.from, req.body.methodParams.to,
+                            req.body.methodParams.amount, req.body.methodParams.gasPrice, req.body.methodParams.gasLimit, req.body.methodParams.privateKey);
                         res.json({ code: 1, mes: "OK", result: tran });
                         break;
-                        
-                        
+
+
                     default:
                         answer = { code: -1, mes: "No method available" };
                         res.json(answer);
                 }
                 break;
-            
+
+            case "SMARTCONTRACT":
+                var web3 = await BSC_HELPER.initChain(req.body.chainName);
+                switch (req.body.method.toUpperCase()) {
+                    case "BALANCEOF":
+                        var funcName = 'balanceOf';
+                        var funcParams = req.body.methodParams.address;
+                        var balance = await BSC_HELPER.callSmartContractFunction(req.body.chainName, req.body.methodParams.address, req.body.methodParams.tokenAddress, funcName, funcParams);
+                        console.log(funcName, balance);
+                        res.json({ code: 1, mes: "OK", result: balance });
+                        break;
+
+                    case "TRANSFER":
+                        var amountHex = web3.utils.toHex(req.body.methodParams.amount);
+                        var funcName = 'transfer';
+                        var funcParams = [req.body.methodParams.receiver, amountHex];
+                        var tran = await BSC_HELPER.sendSmartContractFunction(req.body.chainName, req.body.methodParams.address, req.body.methodParams.tokenAddress, funcName, funcParams, req.body.methodParams.gasPrice, req.body.methodParams.gasLimit, req.body.methodParams.privateKey);
+                        console.log(funcName, tran);
+                        res.json({ code: 1, mes: "OK", result: tran });
+                        break;
+
+
+                    default:
+                        answer = { code: -1, mes: "No method available" };
+                        res.json(answer);
+                }
+                break;
+
             default:
                 answer = { code: -1, mes: "No cate name founded ." };
                 res.json(answer);
 
         }
-    }catch (err) {
+    } catch (err) {
         console.log(err);
         res.json({ code: -1, mes: err });
     }
