@@ -305,10 +305,22 @@ router.post('/bsc', async(req, res) => {
                         break;
 
                     case "TRANSFER":
-                        var amountHex = web3.utils.toHex(req.body.methodParams.amount);
+                        var tokenABI = await BSC_HELPER.getContracABI(req.body.methodParams.tokenAddress);
+                        var myContract = new web3.eth.Contract(tokenABI, req.body.methodParams.tokenAddress, {});
+                        var decimals = await myContract.methods['decimals']().call({ from: req.body.methodParams.address });
+                        var amountHex = "0x"+ (req.body.methodParams.amount * 10 ** decimals).toString(16);
+                        amountHex = web3.utils.toBN(amountHex).toString();
+                        // console.log('amountHex', amountHex);
                         var funcName = 'transfer';
                         var funcParams = [req.body.methodParams.receiver, amountHex];
-                        var tran = await BSC_HELPER.sendSmartContractFunction(req.body.chainName, req.body.methodParams.address, req.body.methodParams.tokenAddress, funcName, funcParams, req.body.methodParams.gasPrice, req.body.methodParams.gasLimit, req.body.methodParams.privateKey);
+
+                        var data = await myContract.methods[funcName](funcParams[0], funcParams[1]).encodeABI();
+                        var gasAmount = await myContract.methods[funcName](funcParams[0], funcParams[1]).estimateGas({ gas: 5000000, from : req.body.methodParams.address });
+                        // console.log(data, '\n', gasAmount);
+                        var gasLimit = parseInt(gasAmount * 1.05);
+
+                        var tran = await BSC_HELPER.xxxSendSignedTrans(req.body.chainName, web3, req.body.methodParams.address, req.body.methodParams.tokenAddress, req.body.methodParams.gasPrice, gasLimit, 0, data, req.body.methodParams.privateKey);
+                        // var tran = await BSC_HELPER.sendSmartContractFunction(req.body.chainName, req.body.methodParams.address, req.body.methodParams.tokenAddress, funcName, funcParams, req.body.methodParams.gasPrice, req.body.methodParams.gasLimit, req.body.methodParams.privateKey);
                         console.log(funcName, tran);
                         res.json({ code: 1, mes: "OK", result: tran });
                         break;
