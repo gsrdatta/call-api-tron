@@ -310,7 +310,22 @@ router.post('/bsc', async(req, res) => {
                         var tokenABI = await BSC_HELPER.getContracABI(req.body.chainName, req.body.methodParams.tokenAddress);
                         console.log('tokenABI', tokenABI);
                         var myContract = new web3.eth.Contract(tokenABI, req.body.methodParams.tokenAddress, {});
-                        var newX = await myContract.methods['decimals']().call({ from: req.body.methodParams.address });
+                        console.log('myContract', myContract);
+                        
+                        if(!myContract.methods.decimals){
+                            console.log('get new implement');
+                            var newX = await web3.eth.getStorageAt(
+                                req.body.methodParams.tokenAddress,
+                                "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
+                            );
+                            // console.log('newX', (newX));
+                            newX = "0x" + newX.slice(26, newX.length);
+                            // console.log('newX', (newX));
+                            tokenABI = await BSC_HELPER.getContracABI(req.body.chainName, newX);
+                            myContract = new web3.eth.Contract(tokenABI, req.body.methodParams.tokenAddress, {});
+                        }
+                            
+                        
                         var decimals = await myContract.methods['decimals']().call({ from: req.body.methodParams.address });
                         var amountHex = "0x"+ (req.body.methodParams.amount * 10 ** decimals).toString(16);
                         amountHex = web3.utils.toBN(amountHex).toString();
