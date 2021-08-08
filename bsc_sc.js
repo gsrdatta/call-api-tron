@@ -8,7 +8,7 @@ var EthUtil = require('ethereumjs-util');
 
 
 var main = async function() {
-    // BSC_HELPER.getContracABI('0x488cde4f32845b914a4acedf45061092f2a9dac9');
+    // BSC_HELPER.getContracABI('testnet', '0x488cde4f32845b914a4acedf45061092f2a9dac9');
     // var balance = await BSC_HELPER.getTokenBalance('testnet', '0x99467e6D01c427d4296bcD57C7334b62888f9480', '0x488cde4f32845b914a4acedf45061092f2a9dac9');
     // console.log('balance of ', balance);
 

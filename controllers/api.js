@@ -246,6 +246,8 @@ router.post('/duc-ws', async(req, res, next) => {
 
 
 router.post('/bsc', async(req, res) => {
+    console.log('body');
+    console.log(req.body);
     try {
         switch (req.body.cate.toUpperCase()) {
 
@@ -305,8 +307,10 @@ router.post('/bsc', async(req, res) => {
                         break;
 
                     case "TRANSFER":
-                        var tokenABI = await BSC_HELPER.getContracABI(req.body.methodParams.tokenAddress);
+                        var tokenABI = await BSC_HELPER.getContracABI(req.body.chainName, req.body.methodParams.tokenAddress);
+                        console.log('tokenABI', tokenABI);
                         var myContract = new web3.eth.Contract(tokenABI, req.body.methodParams.tokenAddress, {});
+                        var newX = await myContract.methods['decimals']().call({ from: req.body.methodParams.address });
                         var decimals = await myContract.methods['decimals']().call({ from: req.body.methodParams.address });
                         var amountHex = "0x"+ (req.body.methodParams.amount * 10 ** decimals).toString(16);
                         amountHex = web3.utils.toBN(amountHex).toString();
